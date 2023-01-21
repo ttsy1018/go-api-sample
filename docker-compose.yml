@@ -1,0 +1,36 @@
+version: '3'
+services:
+  api-server:
+    container_name: ${API_CONTAINER_NAME} # .env参照
+    build: ./app # Dockerfileの場所
+    tty: true # 常時起動設定
+    depends_on: # 連携するserviceを指定
+      - db
+    volumes:
+      - ./app:/app # appディレクトリとコンテナ内の/appをマウント
+      - /etc/localtime:/etc/localtime:ro # タイムゾーンを日本時刻に設定
+    ports:
+      - ${API_PORT}:3000
+    environment:
+      - MYSQL_HOST=${MYSQL_HOST}
+      - MYSQL_PORT=${MYSQL_PORT}
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - "TZ=Asia/Tokyo" # タイムゾーンを日本時刻に設定
+
+  db:
+    container_name: ${MYSQL_HOST}
+    build: ./db
+    environment:
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - "TZ=Asia/Tokyo" # タイムゾーンを日本時刻に設定
+    command: mysqld --character-set-server=utf8 --collation-server=utf8_unicode_ci
+    volumes:
+      - ./db/data:/var/lib/mysql
+    ports:
+      - ${MYSQL_PORT}:3306
