@@ -11,9 +11,7 @@ type AppController interface {
 
 type appController struct{}
 
-// モジュール内グローバル関数
 func NewAppController() AppController {
-	// structのアドレスを返す
 	return &appController{}
 }
 

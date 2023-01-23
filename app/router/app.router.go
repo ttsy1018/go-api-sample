@@ -10,13 +10,10 @@ type AppRouter interface {
 }
 
 type appRouter struct {
-	// AppControllerインターフフェース
-	// ※AppControllerのメソッドの集合体みたいなもの
 	apc controllers.AppController
 }
 
 func NewAppRouter(apc controllers.AppController) AppRouter {
-	// structのアドレスを返す
 	return &appRouter{apc}
 }
 
