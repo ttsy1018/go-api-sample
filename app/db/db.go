@@ -3,9 +3,14 @@ package db
 import (
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
-	gorm "github.com/jinzhu/gorm"
-	godotenv "github.com/joho/godotenv"
+	"github.com/jinzhu/gorm"
+	"github.com/joho/godotenv"
 	"os"
+)
+
+var (
+	DB *gorm.DB // このグローバル変数を使わないとぬるぽになるので注意
+	err error
 )
 
 // DBの接続
@@ -24,13 +29,21 @@ func Init() *gorm.DB {
 	HOST := "tcp(" + os.Getenv("MYSQL_HOST") + ":" + os.Getenv("MYSQL_PORT") + ")"
 	DBNAME := os.Getenv("MYSQL_DATABASE")
 
-	CONNECT := USER + ":" + PASS + "@" + HOST + "/" + DBNAME
+	// parseTime: trueでtime.Time型を取得できる
+	CONNECT := USER + ":" + PASS + "@" + HOST + "/" + DBNAME + "?parseTime=true"
 
 	// DB接続
-	db, err := gorm.Open(DBMS, CONNECT)
+	DB, err = gorm.Open(DBMS, CONNECT)
 	if err != nil {
 		panic(err)
 	}
 
-	return db
+	return DB
+}
+
+func CloseDB(db *gorm.DB) {
+	sqlDb := db.DB()
+	if err = sqlDb.Close(); err != nil {
+		panic(err)
+	}
 }
