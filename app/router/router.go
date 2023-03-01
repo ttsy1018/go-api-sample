@@ -28,6 +28,7 @@ func initHandlers() {
 
 	// auth
 	router.HandleFunc("/api/auth/signin", c.ac.Signin).Methods("POST")
+	router.HandleFunc("/api/auth/signup", c.ac.Signup).Methods("POST")
 
 	// todo
 	router.HandleFunc("/api/todo/list", c.tc.GetTodos).Methods("GET")

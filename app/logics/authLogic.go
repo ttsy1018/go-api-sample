@@ -14,28 +14,40 @@ import (
 )
 
 type AuthLogicer interface {
-	Login(w http.ResponseWriter, r *http.Request) (token string, err error)
+	Signin(w http.ResponseWriter, r *http.Request) (token string, err error)
+	Signup(w http.ResponseWriter, r *http.Request) (token string, err error)
 }
 
 type AuthLogic struct {
 	ur repositories.UserRepository
 }
 
-type LoginRequest struct {
-	Email    string `json:email`
-	Password string `json:password`
+// ログインパラメータ
+type SigninRequest struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
 }
 
+// 会員登録パラメータ
+type SignupRequest struct {
+	Name     string `json:"name"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+// struct to interface
 func NewAuthLogicer() AuthLogicer {
 	return &AuthLogic{}
 }
 
-func (al AuthLogic) Login(w http.ResponseWriter, r *http.Request) (token string, err error) {
+////////// authインターフェースを満たすauth構造体のメソッド
+
+func (al AuthLogic) Signin(w http.ResponseWriter, r *http.Request) (token string, err error) {
 	// リクエストbodyの取り出し
 	body, _ := ioutil.ReadAll(r.Body)
 
 	// json decode
-	var req LoginRequest
+	var req SigninRequest
 	err = json.Unmarshal(body, &req)
 	if err != nil {
 		// todo: send error response
@@ -71,6 +83,69 @@ func (al AuthLogic) Login(w http.ResponseWriter, r *http.Request) (token string,
 
 	// rensponse
 	return token, nil
+}
+
+func (al *AuthLogic) Signup(w http.ResponseWriter, r *http.Request) (token string, err error) {
+	// リクエストbodyの取り出し
+	body, _ := ioutil.ReadAll(r.Body)
+
+	// json decode
+	var req SignupRequest
+	err = json.Unmarshal(body, &req)
+	if err != nil {
+		// todo: send error response
+
+		return "", err
+	}
+
+	// バリデーション
+
+	// ユニークチェック
+	// Emailからユーザリスト取得
+	users, err := al.ur.GetAllByEmail(req.Email)
+	if err != nil {
+		// todo: send error response
+
+		return "", err
+	}
+	// ユニークチェック
+	if len(users) != 0 {
+		// todo: send error response
+
+		return "", nil
+	}
+
+	// リクエストされたパスワードをハッシュ化
+	hashedPassword := al.hashPassword(req.Password)
+
+	// 構造体にリクエストデータを追加
+	var createUser models.User
+	createUser.Name = req.Name
+	createUser.Email = req.Email
+	createUser.Password = string(hashedPassword)
+	if err := al.ur.CreateUser(&createUser); err != nil {
+		// todo: send error response
+
+		return "", err
+	}
+
+	// token発行
+	token, err = al.createJwtToken(&createUser)
+	if err != nil {
+		// todo: send error response
+
+		return "", err
+	}
+
+	// rensponse
+	return token, nil
+}
+
+////////// モジュール内privateメソッド
+
+func (al *AuthLogic) hashPassword(password string) []byte {
+	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	return hashedPassword
 }
 
 // jwtトークンを作成
