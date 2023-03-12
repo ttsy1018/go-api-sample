@@ -2,6 +2,7 @@ package logics
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"myapp/models"
 	"myapp/repositories"
@@ -157,12 +158,12 @@ func (al *AuthLogic) createJwtToken(user *models.User) (string, error) {
 	token.Claims = jwt.MapClaims{
 		"id":  user.ID,
 		"aud": user.Email + user.Name,
-		"exp": time.Now().Add(time.Hour * 24), // 24時間後
+		"exp": time.Now().Add(time.Hour * 24).Unix(), // 24時間後 (unix時間にしないとうまくいかない)
 	}
 
 	// sign
 	secretKey := os.Getenv("JWT_TOKEN_SIGN")
-
+	fmt.Println([]byte(secretKey))
 	tokenString, err := token.SignedString([]byte(secretKey))
 	if err != nil {
 		return "", err
@@ -170,3 +171,13 @@ func (al *AuthLogic) createJwtToken(user *models.User) (string, error) {
 
 	return tokenString, nil
 }
+
+// /*
+// jwt認証のミドルウェア
+// */
+// var JwtMiddleware = jwtmiddleware.New(jwtmiddleware.Options{
+// 	ValidationKeyGetter: func(token *jwt.Token) (interface{}, error) {
+// 		return []byte(os.Getenv("JWT_TOKEN_SIGN")), nil
+// 	},
+// 	SigningMethod: jwt.SigningMethodHS256,
+// })

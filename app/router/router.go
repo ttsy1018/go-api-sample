@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"myapp/controllers"
+	mw "myapp/middleware"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -31,7 +32,7 @@ func initHandlers() {
 	router.HandleFunc("/api/auth/signup", c.ac.Signup).Methods("POST")
 
 	// todo
-	router.HandleFunc("/api/todo/list", c.tc.GetTodos).Methods("GET")
+	router.Handle("/api/todo/list", mw.IsAuthorized(c.tc.GetTodos)).Methods("GET")
 }
 
 func Start() {
