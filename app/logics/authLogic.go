@@ -2,15 +2,12 @@ package logics
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"myapp/models"
 	"myapp/repositories"
+	"myapp/services"
 	"net/http"
-	"os"
-	"time"
 
-	jwt "github.com/form3tech-oss/jwt-go"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -75,7 +72,7 @@ func (al AuthLogic) Signin(w http.ResponseWriter, r *http.Request) (token string
 	}
 
 	// token発行
-	token, err = al.createJwtToken(&user)
+	token, err = services.CreateJwtToken(&user)
 	if err != nil {
 		// todo: send error response
 
@@ -99,7 +96,7 @@ func (al *AuthLogic) Signup(w http.ResponseWriter, r *http.Request) (token strin
 		return "", err
 	}
 
-	// バリデーション
+	// todoバリデーション
 
 	// ユニークチェック
 	// Emailからユーザリスト取得
@@ -131,7 +128,7 @@ func (al *AuthLogic) Signup(w http.ResponseWriter, r *http.Request) (token strin
 	}
 
 	// token発行
-	token, err = al.createJwtToken(&createUser)
+	token, err = services.CreateJwtToken(&createUser)
 	if err != nil {
 		// todo: send error response
 
@@ -148,36 +145,3 @@ func (al *AuthLogic) hashPassword(password string) []byte {
 	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	return hashedPassword
 }
-
-// jwtトークンを作成
-func (al *AuthLogic) createJwtToken(user *models.User) (string, error) {
-	// header
-	token := jwt.New(jwt.SigningMethodHS256)
-
-	// claims
-	token.Claims = jwt.MapClaims{
-		"id":  user.ID,
-		"aud": user.Email + user.Name,
-		"exp": time.Now().Add(time.Hour * 24).Unix(), // 24時間後 (unix時間にしないとうまくいかない)
-	}
-
-	// sign
-	secretKey := os.Getenv("JWT_TOKEN_SIGN")
-	fmt.Println([]byte(secretKey))
-	tokenString, err := token.SignedString([]byte(secretKey))
-	if err != nil {
-		return "", err
-	}
-
-	return tokenString, nil
-}
-
-// /*
-// jwt認証のミドルウェア
-// */
-// var JwtMiddleware = jwtmiddleware.New(jwtmiddleware.Options{
-// 	ValidationKeyGetter: func(token *jwt.Token) (interface{}, error) {
-// 		return []byte(os.Getenv("JWT_TOKEN_SIGN")), nil
-// 	},
-// 	SigningMethod: jwt.SigningMethodHS256,
-// })

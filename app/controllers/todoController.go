@@ -15,7 +15,7 @@ func (tc *TodoController) GetTodos(w http.ResponseWriter, r *http.Request) {
 	todoLogic := logics.NewTodoLogicer()
 
 	// todoを取得
-	todos, err := todoLogic.GetTodos()
+	todos, err := todoLogic.GetTodos(r)
 
 	// エラーハンドル
 	if err != nil {

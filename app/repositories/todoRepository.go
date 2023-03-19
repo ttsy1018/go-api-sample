@@ -4,17 +4,15 @@ import (
 	"fmt"
 	"myapp/db"
 	"myapp/models"
-	// "github.com/jinzhu/gorm"
 )
 
 type TodoRepository struct{}
 
 // todo全件取得
-func (tr *TodoRepository) GetTodos(todos *[]models.Todo) error {
+func (tr *TodoRepository) GetTodos(todos *[]models.Todo, userId int) error {
 	// DBからtodoを取得
 	// ORMでクエリ実行 -> 指定ポインタ先の変数に格納
-	// todo: ユーザIDの絞り込み
-	result := db.DB.Find(&todos)
+	result := db.DB.Where("user_id = ?", userId).Find(&todos)
 
 	// エラーチェック
 	if result.Error != nil {

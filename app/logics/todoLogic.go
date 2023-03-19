@@ -1,14 +1,16 @@
 package logics
 
 import (
-	"myapp/repositories"
 	"fmt"
 	"myapp/models"
+	"myapp/repositories"
+	"myapp/services"
+	"net/http"
 )
 
 // todoのインターフェース
 type TodoLogicer interface {
-	GetTodos() ([]models.Todo, error)
+	GetTodos(r *http.Request) ([]models.Todo, error)
 }
 
 // todoの構造体
@@ -25,9 +27,17 @@ func NewTodoLogicer() TodoLogicer {
 
 ////////// todoインターフェースを満たすtodo構造体のメソッド
 
-func (tl *TodoLogic) GetTodos() (todos []models.Todo, err error) {
+func (tl *TodoLogic) GetTodos(r *http.Request) (todos []models.Todo, err error) {
+	// ユーザIDを取得
+	userId, err := services.GetUserIdByRequestToken(r)
+	if err != nil {
+		fmt.Println(err)
+
+		return todos, err
+	}
+
 	// todoを取得
-	err = tl.todoRepo.GetTodos(&todos)
+	err = tl.todoRepo.GetTodos(&todos, userId)
 
 	// エラーハンドル
 	if err != nil {
